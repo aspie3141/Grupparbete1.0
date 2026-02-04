@@ -1,0 +1,75 @@
+services:
+  # =============================================================
+  # LASTBALANSERARE
+  # =============================================================
+  # TODO: Konfigurera lastbalanseraren
+  # - Bygg från ./loadbalancer
+  # - Exponera port 80 till hosten
+  # - Containern behöver NET_ADMIN capability för nftables
+  # - Aktivera IP-forwarding via sysctls
+  # - Anslut till frontend-nätverket med statisk IP 172.20.0.10
+  # =============================================================
+  loadbalancer:
+    build: ./loadbalancer
+    container_name: loadbalancer
+    # TODO: Lägg till ports, cap_add, sysctls, networks
+    depends_on:
+      - app1
+      - app2
+
+  # =============================================================
+  # APPLIKATIONSINSTANSER
+  # =============================================================
+  # TODO: Konfigurera två appinstanser (app1 och app2)
+  # - Bygg från ../app-repo/app
+  # - Sätt miljövariabler för databasanslutning
+  #   (DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME)
+  # - Anslut till BÅDE frontend och backend-nätverk
+  # - Ge statiska IP-adresser på frontend-nätverket
+  #   (app1: 172.20.0.11, app2: 172.20.0.12)
+  # - Vänta på att MariaDB är healthy innan start
+  # =============================================================
+  app1:
+    build: ../app-repo/app
+    container_name: app1
+    # TODO: Lägg till environment, networks, depends_on
+
+  app2:
+    build: ../app-repo/app
+    container_name: app2
+    # TODO: Lägg till environment, networks, depends_on
+
+  # =============================================================
+  # DATABAS
+  # =============================================================
+  # TODO: Konfigurera MariaDB
+  # - Använd image mariadb:10
+  # - Sätt MYSQL_ROOT_PASSWORD och MYSQL_DATABASE
+  # - Montera init.sql till /docker-entrypoint-initdb.d/
+  # - Anslut ENBART till backend-nätverket (ej frontend!)
+  # - Lägg till healthcheck
+  # - Använd named volume för datalagring
+  # =============================================================
+  mariadb:
+    image: mariadb:10
+    container_name: mariadb
+    # TODO: Lägg till environment, volumes, networks, healthcheck
+
+# =============================================================
+# NÄTVERK
+# =============================================================
+# TODO: Definiera två nätverk:
+# - frontend: bridge-nätverk med IPAM-subnet 172.20.0.0/24
+# - backend: bridge-nätverk (ingen IPAM krävs)
+#
+# Tänk på: Vilka tjänster ska vara på vilka nätverk?
+# Databasen ska INTE vara nåbar från lastbalanseraren.
+# =============================================================
+# networks:
+
+# =============================================================
+# VOLYMER
+# =============================================================
+# TODO: Definiera named volume för databaslagring
+# =============================================================
+# volumes:
