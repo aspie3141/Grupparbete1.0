@@ -2,74 +2,95 @@ services:
   # =============================================================
   # LASTBALANSERARE
   # =============================================================
-  # TODO: Konfigurera lastbalanseraren
-  # - Bygg från ./loadbalancer
-  # - Exponera port 80 till hosten
-  # - Containern behöver NET_ADMIN capability för nftables
-  # - Aktivera IP-forwarding via sysctls
-  # - Anslut till frontend-nätverket med statisk IP 172.20.0.10
-  # =============================================================
   loadbalancer:
     build: ./loadbalancer
     container_name: loadbalancer
-    # TODO: Lägg till ports, cap_add, sysctls, networks
+    ports:
+      - "80:80"
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+    networks:
+      frontend:
+        ipv4_address: 172.20.0.10
     depends_on:
-      - app1
-      - app2
+      app1:
+        condition: service_started
+      app2:
+        condition: service_started
 
   # =============================================================
   # APPLIKATIONSINSTANSER
   # =============================================================
-  # TODO: Konfigurera två appinstanser (app1 och app2)
-  # - Bygg från ../app-repo/app
-  # - Sätt miljövariabler för databasanslutning
-  #   (DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME)
-  # - Anslut till BÅDE frontend och backend-nätverk
-  # - Ge statiska IP-adresser på frontend-nätverket
-  #   (app1: 172.20.0.11, app2: 172.20.0.12)
-  # - Vänta på att MariaDB är healthy innan start
-  # =============================================================
   app1:
     build: ../app-repo/app
     container_name: app1
-    # TODO: Lägg till environment, networks, depends_on
+    environment:
+      DB_HOST: mariadb
+      DB_PORT: 3306
+      DB_USER: app_user
+      DB_PASSWORD: secure_password_123
+      DB_NAME: app_db
+    networks:
+      frontend:
+        ipv4_address: 172.20.0.11
+      backend:
+    depends_on:
+      mariadb:
+        condition: service_healthy
 
   app2:
     build: ../app-repo/app
     container_name: app2
-    # TODO: Lägg till environment, networks, depends_on
+    environment:
+      DB_HOST: mariadb
+      DB_PORT: 3306
+      DB_USER: app_user
+      DB_PASSWORD: secure_password_123
+      DB_NAME: app_db
+    networks:
+      frontend:
+        ipv4_address: 172.20.0.12
+      backend:
+    depends_on:
+      mariadb:
+        condition: service_healthy
 
   # =============================================================
   # DATABAS
   # =============================================================
-  # TODO: Konfigurera MariaDB
-  # - Använd image mariadb:10
-  # - Sätt MYSQL_ROOT_PASSWORD och MYSQL_DATABASE
-  # - Montera init.sql till /docker-entrypoint-initdb.d/
-  # - Anslut ENBART till backend-nätverket (ej frontend!)
-  # - Lägg till healthcheck
-  # - Använd named volume för datalagring
-  # =============================================================
   mariadb:
     image: mariadb:10
     container_name: mariadb
-    # TODO: Lägg till environment, volumes, networks, healthcheck
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password_123
+      MYSQL_DATABASE: app_db
+    volumes:
+      - ./mariadb/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mariadb_data:/var/lib/mysql
+    networks:
+      backend:
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 # =============================================================
 # NÄTVERK
 # =============================================================
-# TODO: Definiera två nätverk:
-# - frontend: bridge-nätverk med IPAM-subnet 172.20.0.0/24
-# - backend: bridge-nätverk (ingen IPAM krävs)
-#
-# Tänk på: Vilka tjänster ska vara på vilka nätverk?
-# Databasen ska INTE vara nåbar från lastbalanseraren.
-# =============================================================
-# networks:
+networks:
+  frontend:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+  backend:
+    driver: bridge
 
 # =============================================================
 # VOLYMER
 # =============================================================
-# TODO: Definiera named volume för databaslagring
-# =============================================================
-# volumes:
+volumes:
+  mariadb_data:

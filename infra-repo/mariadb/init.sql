@@ -2,23 +2,22 @@
 -- Databasinitiering
 -- =============================================================
 
--- TODO: Skapa tabellen "items" med följande kolumner:
---   id          - INT, auto-increment, primärnyckel
---   name        - VARCHAR(255), NOT NULL
---   description - TEXT
---   created_at  - TIMESTAMP med standardvärde CURRENT_TIMESTAMP
+-- Skapa tabellen "items"
+CREATE TABLE items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
+-- Lägg in exempeldata
+INSERT INTO items (name, description) VALUES 
+    ('Artikel 1', 'En beskrivning av artikel 1'),
+    ('Artikel 2', 'En beskrivning av artikel 2'),
+    ('Artikel 3', 'En beskrivning av artikel 3');
 
--- TODO: Lägg in exempeldata (minst 3 rader)
--- INSERT INTO items (name, description) VALUES ...
-
-
--- TODO: Skapa en databasanvändare för applikationen
--- Användaren ska ha BEGRÄNSADE rättigheter (principen om minsta privilegium)
--- Tips: Fundera på vilka SQL-operationer applikationen faktiskt behöver.
---       Vilka operationer stöder API:et? (Titta på endpoints i app-repo)
---       Behöver applikationen kunna radera data?
---
--- CREATE USER IF NOT EXISTS 'app_user'@'%' IDENTIFIED BY '...';
--- GRANT ... ON app_db.* TO 'app_user'@'%';
--- FLUSH PRIVILEGES;
+-- Skapa en databasanvändare för applikationen med minsta privilegium
+-- Applikationen behöver: SELECT, INSERT, UPDATE (ej DELETE)
+CREATE USER IF NOT EXISTS 'app_user'@'%' IDENTIFIED BY 'secure_password_123';
+GRANT SELECT, INSERT, UPDATE ON app_db.* TO 'app_user'@'%';
+FLUSH PRIVILEGES;
