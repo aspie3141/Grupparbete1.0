@@ -48,3 +48,13 @@ infra-repo/
 
 Se `docs/`-katalogen:
 - **ASSIGNMENT.md** — Fullständig uppgiftsbeskrivning med arkitekturdiagram
+
+## Verifiering (2026-02-09)
+
+- `docker compose ps` visar att `loadbalancer`, `app1`, `app2`, `mariadb` ar uppe
+- `GET /health` via lastbalanseraren returnerar `status: healthy` och `database: connected`
+- `GET /items` returnerar seedade rader
+- `DELETE /items/1` returnerar `405` (blockerad metod)
+- `docker exec loadbalancer ping -c 1 mariadb` misslyckas (isolering OK)
+- `docker exec mariadb mysql -u app_user ... DELETE ...` ger `ERROR 1142` (minsta privilegium)
+- Hostname varierar mellan tva containrar vid upprepade anrop (round-robin)
